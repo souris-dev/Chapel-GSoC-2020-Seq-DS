@@ -1,3 +1,7 @@
+/* module UnrolledLinkedList: Provides implementation for UnrolledLinkedList */
+/* By default, UnrolledLinkedList is not parallel-safe */
+/* By Souris Ash */
+
 module UnrolledLinkedLists
 {
     private use List;
@@ -115,7 +119,7 @@ module UnrolledLinkedLists
                 this.append(items(i));
         }
 
-        /*  Insert item in the node that has the item at position 'at'
+        /*  Insert item in the node that has the item at position 'at', or the next if that node is full
         at is 1-based index 
         Throws ListEmptyError if list is empty when called 
         Returns false if at > size 
