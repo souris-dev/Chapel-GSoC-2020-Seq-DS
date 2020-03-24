@@ -13,6 +13,12 @@ module UnrolledLinkedList
         var numberOfItems: int = 0;
         var data: list(dataType);
         var next: unmanaged UnrolledLinkedListNode(dataType)?;
+
+        proc init(type datType) 
+        {
+            dataType = datType;
+            next = nil;
+        }
     }
 
     /* ListEmptyError: thrown when pop is called on an empty list */
@@ -26,11 +32,39 @@ module UnrolledLinkedList
     proc =(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), const ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
     {
         UnrolledLinkedList1.destroy();
+        UnrolledLinkedList1.numberOfElementsInEachNode = UnrolledLinkedList2.numberOfElementsInEachNode;
 
         for item in UnrolledLinkedList2 do
             UnrolledLinkedList1.append(item);
     }
 
+    /* == overload for ULL */
+    /* 2 ULLS are equal if and only if their size, numberOfElementsInEachNode and elements are equal in same order */
+    proc ==(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
+    {
+        var equal = true;
+
+        if (UnrolledLinkedList1.size != UnrolledLinkedList2.size) {
+            return false;
+        }
+
+        if (UnrolledLinkedList1.numberOfElementsInEachNode != UnrolledLinkedList2.numberOfElementsInEachNode) {
+            return false;
+        }
+
+        for i in 1..UnrolledLinkedList1.size {
+            if (UnrolledLinkedList1[i] != UnrolledLinkedList2[i]) {
+                equal = false;
+                return false;
+            }
+        }
+        return equal;
+    }
+
+    proc !=(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
+    {
+        return !(UnrolledLinkedList1 == UnrolledLinkedList2);
+    }
 
     /* Note: An UnrolledLinkedList can store only one type of elements */
     record UnrolledLinkedList
@@ -41,12 +75,12 @@ module UnrolledLinkedList
         var head: unmanaged UnrolledLinkedListNode(dataType)?;
         var tail: unmanaged UnrolledLinkedListNode(dataType)?;
 
-        proc init(type datType, numElemInEachNode: int, head: UnrolledLinkedListNode(datType)? = nil, tail: UnrolledLinkedListNode(datType)? = nil)
+        proc init(type datType, numElemInEachNode: int)
         {
             this.dataType = datType;
             this.numberOfElementsInEachNode = numElemInEachNode;
-            this.head = head;
-            this.tail = tail;
+            this.head = nil;
+            this.tail = nil;
         }
 
         /* Iterate over the ULL */
@@ -123,16 +157,16 @@ module UnrolledLinkedList
         /*  Insert item in the node that has the item at position 'at', or the next if that node is full
         at is 1-based index 
         Throws ListEmptyError if list is empty when called 
-        Returns false if at > size 
+        Returns false if at > size or unsuccessful
         Returns true if successfully inserted */
-        proc insertNear(at: int, item: dataType) throws
+        proc insertNear(at: int, item: dataType): bool throws
         {
             var temp = head;
 
             if (head == nil)
             {
                 throw new owned ListEmptyError();
-                return nil;
+                return false;
             }
 
             if (at > size)
@@ -182,7 +216,7 @@ module UnrolledLinkedList
                 // In chapel, list index starts from 1
                 for i in (midInd + 1)..n
                 {
-                    node!.data.append(tail!.data[i]);
+                    node!.data.append(temp!.data[i]);
                     node!.numberOfItems += 1;
                 }
 
@@ -195,10 +229,11 @@ module UnrolledLinkedList
                 temp!.numberOfItems = midInd;
 
                 node!.next = temp!.next;
-                temp!.next = node!.next;
+                temp!.next = node;
             }
 
             size += 1;
+            return true;
         }
 
         /* Another name for append() */
@@ -215,55 +250,95 @@ module UnrolledLinkedList
         }
 
         /* TODO: Check: The dataType stored in ull should be same as this one */
+        /* Warning: The result of this extend is not as one would expect for a regular linked list */
+        /* Because we are appending one by one to an ULL */
         proc extend(ull: UnrolledLinkedList(dataType))
         {
-            for i in ull! do
-                this.append(i);
+            if (ull.size != 0)
+            {
+                for i in ull do
+                    this.append(i);
+            }
         }
 
         /* pop: Delete and return last element */
-        /* Throws ListEmptyError if called on an empty list */
-        proc pop() throws
+        /* halts if called on an empty list */
+        proc pop()
         {
-            if (tail == nil)
+            if (head == nil || tail == nil)
             {
-                throw new owned ListEmptyError();
+                halt("Pop called on empty list");
             }
 
             var popElem = tail!.data.pop();
             tail!.numberOfItems -= 1;
+            size -= 1;
 
+            var temp = head;
             if (tail!.numberOfItems == 0) 
             {
-                var temp = head;
-
-                if (temp == nil) 
+                if (temp!.next == nil) 
                 {
                     head = nil;
                     tail = nil;
+                    return popElem;
                 }
 
                 else 
                 {
-                    while (temp!.next != tail) do
+                    while (temp!.next!.next != nil) do
                         temp = temp!.next;
+
+                    var temp2 = temp!.next;
+                    delete temp2;
 
                     temp!.next = nil;
                     tail = temp;
                 }
             }
-            size -= 1;
+
+            var n: int = numberOfElementsInEachNode;
+            var midInd: int = if n % 2 == 1 then n/2 + 1 else n/2;
+
+            if (tail!.numberOfItems < midInd)
+            {
+                temp = head;
+
+                if (temp!.next == nil)
+                {
+                    tail = head;
+                    return popElem;
+                }
+
+                while (temp!.next!.next != nil) do
+                    temp = temp!.next;
+
+                // merge tail and its previous node
+                while (!(temp!.next!.data.isEmpty()))
+                {
+                    temp!.data.append(temp!.next!.data.pop(1));
+                    temp!.numberOfItems += 1;
+                    temp!.next!.numberOfItems -= 1; // not really needed
+                }
+                
+                // delete current tail and update it
+                var temp2 = temp!.next;
+                delete temp2;
+                temp!.next = nil;
+                tail = temp;
+            }
+
             return popElem;
         }
 
         /* Delete item */
-        /* Throws ListEmptyError if called on empty list */
+        /* Halts if called on empty list */
         /* Does nothing if item is not found */
-        proc deleteItem(item: dataType)
+        proc deleteItem(item: dataType) throws
         {
             if (head == nil)
             {
-                throw new owned ListEmptyError();
+                halt("Delete item called on empty list.");
             }
             else
             {
@@ -295,10 +370,26 @@ module UnrolledLinkedList
 
                 temp!.data.remove(item);
                 temp!.numberOfItems -= 1;
+                size -= 1;
 
                 if (temp!.next == nil)
                 {
-                    // if we are at the tail, we're done
+                    writeln("At tail!");
+                    // if we are at the tail, and tail's data is empty
+                    // delete the tail node and set tail properly
+                    if (temp!.data.isEmpty())
+                    {
+                        var temp2 = head;
+
+                        while (temp2!.next!.next != nil) {
+                            temp2 = temp2!.next;
+                        }
+
+                        tail = temp2;
+                        delete temp2!.next;
+                    }
+                    writeln("Tail data: ", tail!.data);
+
                     return;
                 }
 
@@ -309,20 +400,30 @@ module UnrolledLinkedList
                     temp!.numberOfItems += 1;
                 }
 
-                // TODO: is this line OK for both even and odd numberOfElementsInEachNode ?
-                if (temp!.next!.numberOfItems < numberOfElementsInEachNode / 2)
+                var n: int = numberOfElementsInEachNode;
+                var midInd: int = if n % 2 == 1 then n/2 + 1 else n/2;
+
+                if (temp!.next!.numberOfItems < midInd)
                 {
                     // merge temp!.next and temp
                     while (!(temp!.next!.data.isEmpty()))
                     {
-                        temp!.data.append(temp!.next!.pop(1));
+                        temp!.data.append(temp!.next!.data.pop(1));
                         temp!.numberOfItems += 1;
                         temp!.next!.numberOfItems -= 1; // not really needed
                     }
                     
                     // delete temp!.next
-                    temp!.next = temp!.next!.next;
-                    delete temp!.next;
+                    var temp2 = temp!.next;
+
+                    temp!.next = temp2!.next;
+
+                    if (temp2!.next == nil) {
+                        temp!.next = nil;
+                        tail = temp;
+                    }
+
+                    delete temp2;
                 }
             }
         }
@@ -352,10 +453,10 @@ module UnrolledLinkedList
         /* returns nil if i is out of bounds */
         /* Note: i is 1-based */
         pragma "no doc"
-        proc this(i: int) ref
+        proc this(i: int) ref: dataType
         {
             if (i > size) then
-                return nil;
+                halt("Index out of bounds!");
 
             var temp = head;
             var count = 0;
@@ -373,13 +474,20 @@ module UnrolledLinkedList
                 
                 temp = temp!.next;
             }
+            halt("Index out of bounds!");
         }
 
         /* Returns reference to item if found */
-        /* else returns nil. */
-        proc find(key: dataType) ref
+        /* else halts */
+        /* TODO: how else can we return that we couldn't find the key? */
+        proc find(key: dataType) ref throws
         {
             var temp = head;
+
+            if (head == nil)
+            {
+                halt("find() called on empty list.");
+            }
 
             while (temp != nil)
             {
@@ -393,7 +501,7 @@ module UnrolledLinkedList
                 }
                 temp = temp!.next;
             }
-            return nil;
+            halt("Key not found.");
         }
 
         /* Returns reference to last element */
@@ -434,14 +542,27 @@ module UnrolledLinkedList
 
         /* writeThis() overloaded */
         /* Binary format writing not yet supported*/
+        /* TODO: Fix formatting after last element */
         proc writeThis(f)
         {
             f <~> new ioLiteral("[");
 
+            /*
             for i in this
             {
                 f <~> i <~> new ioLiteral(", ");
+            }*/
+
+            var temp = head;
+
+            while (temp != nil) {
+                for i in temp!.data do
+                    f <~> i <~> new ioLiteral(", ");
+                
+                f <~> new ioLiteral(" / ");
+                temp = temp!.next;
             }
+
             f <~> new ioLiteral("]");
         }
 
