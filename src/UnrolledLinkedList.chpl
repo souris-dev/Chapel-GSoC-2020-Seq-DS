@@ -1,6 +1,5 @@
 /* module UnrolledLinkedList: Provides implementation for UnrolledLinkedList */
 /* By default, UnrolledLinkedList is not parallel-safe */
-/* By Souris Ash */
 
 module UnrolledLinkedList
 {
