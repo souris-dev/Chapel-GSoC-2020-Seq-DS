@@ -2,10 +2,11 @@
 /* By default, UnrolledLinkedList is not parallel-safe */
 /* By Souris Ash */
 
-module UnrolledLinkedLists
+module UnrolledLinkedList
 {
     private use List;
 
+    pragma "no doc"
     class UnrolledLinkedListNode
     {
         type dataType;
