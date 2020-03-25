@@ -72,6 +72,9 @@ proc testAppendsAndOperators(test: borrowed Test) throws
         test.assertEqual(ull[count], i);
         count += 1;
     }
+
+    var ullString = new UnrolledLinkedList(string, 3);
+    writeln(ullString == ull);
 }
 
 proc testDeletions(test: borrowed Test) throws

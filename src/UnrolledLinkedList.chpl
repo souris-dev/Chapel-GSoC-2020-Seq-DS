@@ -28,36 +28,54 @@ module UnrolledLinkedList
         }
     }
 
-    proc =(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), const ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
+    class ListDataTypesUnequalError: Error
     {
-        UnrolledLinkedList1.destroy();
-        UnrolledLinkedList1.numberOfElementsInEachNode = UnrolledLinkedList2.numberOfElementsInEachNode;
+        proc init() {
 
-        for item in UnrolledLinkedList2 do
-            UnrolledLinkedList1.append(item);
+        }
+    }
+
+    // In case their dataTypes do not match, throw ListDataTypesUnequalError
+    proc =(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), const ref UnrolledLinkedList2: UnrolledLinkedList(?t2)) throws
+    {
+        if (t1 != t2) {
+            throw new ListDataTypesUnequalError();
+            return;
+        }
+        else { // this else is necessary for successful compilation
+            UnrolledLinkedList1.destroy();
+
+            for item in UnrolledLinkedList2 do
+                UnrolledLinkedList1.append(item);
+        }
     }
 
     /* == overload for ULL */
-    /* 2 ULLS are equal if and only if their size, numberOfElementsInEachNode and elements are equal in same order */
-    proc ==(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
-    {
-        var equal = true;
-
-        if (UnrolledLinkedList1.size != UnrolledLinkedList2.size) {
+    /* 2 ULLS are equal if and only if their dataType, size, numberOfElementsInEachNode and elements are equal in same order */
+    proc ==(const ref UnrolledLinkedList1: UnrolledLinkedList(?t1), const ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
+    {   
+        if (t2 != t1) {
             return false;
         }
+        else { // this else is necessary for successfull compilation
+            var equal = true;
 
-        if (UnrolledLinkedList1.numberOfElementsInEachNode != UnrolledLinkedList2.numberOfElementsInEachNode) {
-            return false;
-        }
-
-        for i in 1..UnrolledLinkedList1.size {
-            if (UnrolledLinkedList1[i] != UnrolledLinkedList2[i]) {
-                equal = false;
+            if (UnrolledLinkedList1.size != UnrolledLinkedList2.size) {
                 return false;
             }
+
+            if (UnrolledLinkedList1.numberOfElementsInEachNode != UnrolledLinkedList2.numberOfElementsInEachNode) {
+                return false;
+            }
+
+            for i in 1..UnrolledLinkedList1.size {
+                if (UnrolledLinkedList1[i] != UnrolledLinkedList2[i]) {
+                    equal = false;
+                    return false;
+                }
+            }
+            return equal;
         }
-        return equal;
     }
 
     proc !=(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
@@ -248,11 +266,16 @@ module UnrolledLinkedList
                 this.append(items(i));
         }
 
-        /* TODO: Check: The dataType stored in ull should be same as this one */
+        /* Extend this ULL */
         /* Warning: The result of this extend is not as one would expect for a regular linked list */
         /* Because we are appending one by one to an ULL */
-        proc extend(ull: UnrolledLinkedList(dataType))
+        /* Does nothing if dataType of this list and 'ull' do not match */
+        proc extend(ull: UnrolledLinkedList(?datType))
         {
+            if (datType != this.dataType) {
+                return;
+            }
+
             if (ull.size != 0)
             {
                 for i in ull do
