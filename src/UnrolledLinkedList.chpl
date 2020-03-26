@@ -603,6 +603,14 @@ module UnrolledLinkedList
             f <~> new ioLiteral("]");
         }
 
+        /* To check if the ULL is empty or not */
+        proc isEmpty(): bool {
+            if (size > 0) {
+                return false;
+            }
+            return true;
+        }
+
         /* Clear the list */
         proc destroy()
         {
