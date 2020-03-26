@@ -35,12 +35,16 @@ module UnrolledLinkedList
         }
     }
 
-    // In case their dataTypes do not match, throw ListDataTypesUnequalError
-    proc =(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), const ref UnrolledLinkedList2: UnrolledLinkedList(?t2)) throws
+    // In case their dataTypes do not match, show error on stderr and do nothing
+    proc =(ref UnrolledLinkedList1: UnrolledLinkedList(?t1), const ref UnrolledLinkedList2: UnrolledLinkedList(?t2))
     {
         if (t1 != t2) {
-            throw new ListDataTypesUnequalError();
-            return;
+            try {
+                stderr.writeln("error: both UnrolledLinkedLists should have same dataTypes for copying");
+            }
+            catch {
+                // do nothing
+            }
         }
         else { // this else is necessary for successful compilation
             UnrolledLinkedList1.destroy();
@@ -98,6 +102,17 @@ module UnrolledLinkedList
             this.numberOfElementsInEachNode = numElemInEachNode;
             this.head = nil;
             this.tail = nil;
+        }
+
+        /* Returns true if this ULL and 'ull2' have same dataTypes, else false*/
+        proc isSameDataTypeAs(ull2: UnrolledLinkedList(?t)): bool
+        {
+            if (this.dataType == t) {
+                return true;
+            }
+            else {
+                return false;
+            }
         }
 
         /* Iterate over the ULL */

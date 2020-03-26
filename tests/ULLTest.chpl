@@ -74,7 +74,10 @@ proc testAppendsAndOperators(test: borrowed Test) throws
     }
 
     var ullString = new UnrolledLinkedList(string, 3);
-    writeln(ullString == ull);
+    ullString = ull;
+    test.assertFalse(ull.isSameDataTypeAs(ullString));
+    test.assertFalse(ullString.isSameDataTypeAs(ull));
+    test.assertFalse(ull2 == ullString);
 }
 
 proc testDeletions(test: borrowed Test) throws
