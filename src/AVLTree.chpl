@@ -1,6 +1,6 @@
 module AVLTree
 {
-    private use LockFreeStack;
+    private use List;
 
     pragma "no doc"
     class AVLTreeNode
@@ -16,10 +16,10 @@ module AVLTree
         proc init(type dataType, data: dataType)
         {
             this.dataType = dataType;
+            this.data = data;
             this.left = nil;
             this.right = nil;
             this.height = 1;
-            this.data = data;
         }
     }
 
@@ -103,10 +103,10 @@ module AVLTree
     // 2. Update balance factor of current node
     // 3. Perform necessary rotations to balance current node if needed
 
-    private proc recurInsert(type dataType, key: dataType, node: AVLTreeNode?)
+    private proc recurInsert(type dataType, key: dataType, node: AVLTreeNode?): AVLTreeNode
     {
         if (node == nil) {
-            return new unmanaged AVLTreeNode(key);
+            return new unmanaged AVLTreeNode(dataType, key);
         }
 
         if (key <= node!.data) 
@@ -256,8 +256,8 @@ module AVLTree
     {
         type dataType;
         var root: unmanaged AVLTreeNode(dataType)?;
-        var lastNode: AVLTreeNode;
-        var parentOfLastNode: AVLTreeNode;
+        var lastNode: unmanaged AVLTreeNode(dataType)?;
+        var parentOfLastNode: unmanaged AVLTreeNode(dataType)?;
 
         proc init(type dataType)
         {
