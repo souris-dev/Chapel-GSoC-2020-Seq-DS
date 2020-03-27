@@ -1,5 +1,10 @@
 module AVLTree
 {
+<<<<<<< HEAD
+=======
+    private use LockFreeStack;
+
+>>>>>>> master
     pragma "no doc"
     class AVLTreeNode
     {
@@ -14,10 +19,17 @@ module AVLTree
         proc init(type dataType, data: dataType)
         {
             this.dataType = dataType;
+<<<<<<< HEAD
             this.data = data;
             this.left = nil;
             this.right = nil;
             this.height = 1;
+=======
+            this.left = nil;
+            this.right = nil;
+            this.height = 1;
+            this.data = data;
+>>>>>>> master
         }
     }
 
@@ -93,6 +105,7 @@ module AVLTree
     }
 
     pragma "no doc"
+<<<<<<< HEAD
     // Recursive utility function that stores the last node of the BST rooted at 'root' in 'lastNode'
     // and its parent in 'lastNodeParent'
     proc computeLastNodeAndParent(root: AVLTreeNode, level: int, parent: AVLTreeNode, lastNode: AVLTreeNode, lastNodeParent: AVLTreeNode)
@@ -152,6 +165,115 @@ module AVLTree
             else if (key > node!.data) 
             {
                 node!.right = _recurInsert(key, node!.left);
+=======
+    // Utility function to insert 'nodeToIns' at the subtree rooted
+    // at 'node' and re-balance by performing rotations after each insertion
+    // returns the new root of the subtree it was inserted in
+    // Steps for AVL Tree:
+    // 1. Standard BST insert
+    // 2. Update balance factor of current node
+    // 3. Perform necessary rotations to balance current node if needed
+
+    private proc recurInsert(type dataType, key: dataType, node: AVLTreeNode?)
+    {
+        if (node == nil) {
+            return new unmanaged AVLTreeNode(key);
+        }
+
+        if (key <= node!.data) 
+        {
+            node!.left = recurInsert(dataType, node!.right, key);
+        }
+        else if (key > node!.data) 
+        {
+            node!.right = recurInsert(dataType, node!.left, key);
+        }
+
+        node!.height = maxOf(getHeight(node!.left), getHeight(node!.right)) + 1;
+
+        // Perform rotations after checking balance
+        var bal: int = getBalanceFactor(node);
+
+        if (bal > 1 && key < node!.left!.data) // LL
+        {
+            return rotateRight(node);
+        }
+        if (bal < -1 && key > node!.right!.data) // RR
+        {
+            return rotateLeft(node);
+        }
+
+        if (bal > 1 && key > node!.left!.data) // LR
+        {
+            node!.left = rotateLeft(node!.left);
+            return rotateRight(node);
+        }
+        if (bal < -1 && key < node!.right!.data) // RL
+        {
+            node!.right = rotateRight(node!.right);
+            return rotateLeft(node);
+        }
+
+        // If no rotations are needed, just return the node
+        return node;
+    }
+
+    pragma "no doc"
+    // Utility function to recursively delete the node with key 'key'
+    // in the subtree with root node 'node'
+    // Returns root of the modified subtree
+    private proc recurDelete(type dataType, key: dataType, node: AVLTreeNode?)
+    {
+        if (node == nil) {
+            return nil;
+        }
+
+        if (key < node!.data) 
+        {
+            node!.left = recurDelete(dataType, node, key);
+        }
+        else if (key > node!.data) 
+        {
+            node!.right = recurDelete(dataType, node, key);
+        }
+        else // if we're here, this is the node to be deleted
+        {
+            if (node!.left == nil || node!.right == nil)
+            {
+                // this node has only one child or no child
+                var temp: AVLTreeNode = if node!.right == nil then node!.left else node!.right;
+
+                if (temp == nil)
+                {
+                    // no child
+                    temp = node;
+                    node = nil;
+                }
+                else
+                {
+                    // one child
+                    node!.data = temp!.data;
+                }
+                delete temp;
+            }
+            else
+            {
+                // if 2 children, replace by minimum value of right subtree
+                // (inorder successor)
+                var temp = node!.right;
+
+                // go to the leftmost node in the right subtree
+                while (temp!.left != nil) do
+                    temp = temp!.left;
+                
+                node!.data = temp!.data;
+                node!.right = recurDelete(dataType, node!.right, temp!.data);
+            }
+
+            // a quick nil check
+            if (node == nil) {
+                return nil;
+>>>>>>> master
             }
 
             node!.height = maxOf(getHeight(node!.left), getHeight(node!.right)) + 1;
@@ -159,21 +281,37 @@ module AVLTree
             // Perform rotations after checking balance
             var bal: int = getBalanceFactor(node);
 
+<<<<<<< HEAD
             if (bal > 1 && key < node!.left!.data) // LL
             {
                 return rotateRight(node);
             }
             if (bal < -1 && key > node!.right!.data) // RR
+=======
+            if (bal > 1 && getBalanceFactor(node!.left) >= 0) // LL
+            {
+                return rotateRight(node);
+            }
+            if (bal < -1 && getBalanceFactor(node!.right) <= 0) // RR
+>>>>>>> master
             {
                 return rotateLeft(node);
             }
 
+<<<<<<< HEAD
             if (bal > 1 && key > node!.left!.data) // LR
+=======
+            if (bal > 1 && key > getBalanceFactor(node!.left) < 0) // LR
+>>>>>>> master
             {
                 node!.left = rotateLeft(node!.left);
                 return rotateRight(node);
             }
+<<<<<<< HEAD
             if (bal < -1 && key < node!.right!.data) // RL
+=======
+            if (bal < -1 && getBalanceFactor(node!.right) > 0) // RL
+>>>>>>> master
             {
                 node!.right = rotateRight(node!.right);
                 return rotateLeft(node);
@@ -182,13 +320,54 @@ module AVLTree
             // If no rotations are needed, just return the node
             return node;
         }
+<<<<<<< HEAD
+=======
+    }
+
+    pragma "no doc"
+    // Recursive utility function that stores the last node of the BST rooted at 'root' in 'lastNode'
+    // and its parent in 'lastNodeParent'
+    proc computeLastNodeAndParent(root: AVLTreeNode, level: int, parent: AVLTreeNode, lastNode: AVLTreeNode, lastNodeParent: AVLTreeNode)
+    {
+        // base case
+        if (root == nil) {
+            return;
+        }
+
+        if (level == 1)
+        {
+            lastNode = root;
+            lastNodeParent = parent;
+        }
+        computeLastNodeAndParent(root.left, level-1, root, lastNode, lastNodeParent);
+    }
+
+    record AVLTree
+    {
+        type dataType;
+        var root: unmanaged AVLTreeNode(dataType)?;
+        var lastNode: AVLTreeNode;
+        var parentOfLastNode: AVLTreeNode;
+
+        proc init(type dataType)
+        {
+            this.dataType = dataType;
+            root = nil;
+            lastNode = nil;
+            parentOfLastNode = nil;
+        }
+>>>>>>> master
 
         /* Insert 'data' into the AVL tree */
         /* Note: Insert and delete options DO NOT update lastNode and parentOfLastNode */
         /* to preserve standard time complexity */
         proc insertElement(data: dataType)
         {
+<<<<<<< HEAD
             root = _recurInsert(data, root);
+=======
+            root = recurInsert(dataType, data, root);
+>>>>>>> master
         }
 
         /* Another name for insertElement(data) */
@@ -197,6 +376,7 @@ module AVLTree
             insertElement(data);
         }
 
+<<<<<<< HEAD
         pragma "no doc"
         // Utility function to recursively delete the node with key 'key'
         // in the subtree with root node 'node'
@@ -284,6 +464,8 @@ module AVLTree
             }
         }
 
+=======
+>>>>>>> master
         /* Delete node with key 'key' from the AVL tree. Halts if called on empty tree. */
         /* Note: Insert and delete options DO NOT update lastNode and parentOfLastNode */
         /* to preserve standard time complexity */
@@ -292,7 +474,11 @@ module AVLTree
             if (root == nil) {
                 halt("error: deletion of element from empty AVLTree");
             }
+<<<<<<< HEAD
             root = _recurDelete(key, root);
+=======
+            root = recurDelete(dataType, key, root);
+>>>>>>> master
         }
 
         /* Deletes the node with key 'key'. This is another name for deleteElement(key) */
@@ -383,6 +569,7 @@ module AVLTree
                 return;
             }
 
+<<<<<<< HEAD
             var stack = new list(AVLTreeNode);
 
             var curr = root;
@@ -396,10 +583,31 @@ module AVLTree
                 }
 
                 curr = stack.pop();
+=======
+            var stack = new LockFreeStack(AVLTreeNode);
+
+            var curr = root;
+            var isEmpty = false;
+            var temp: AVLTreeNode;
+
+            while (curr != nil || !isEmpty)
+            {
+                while (curr != nil)
+                {
+                    stack.push(curr);
+                    curr = curr!.left;
+                }
+
+                (isEmpty, curr) = stack.pop();
+>>>>>>> master
                 
                 yield curr!.data;
                 curr = curr!.right;
             }
+<<<<<<< HEAD
+=======
+            stack.tryReclaim();
+>>>>>>> master
         }
 
         /* Iterates through the AVL tree by performin inorder traversal */
@@ -416,6 +624,7 @@ module AVLTree
                 return;
             }
 
+<<<<<<< HEAD
             var stack = new list(AVLTreeNode);
             stack.append(root);
 
@@ -424,16 +633,37 @@ module AVLTree
             while (!stack.isEmpty())
             {
                 node = stack.pop();
+=======
+            var stack = new LockFreeStack(AVLTreeNode);
+            stack.push(root);
+
+            var isEmpty = false;
+            var node: AVLTreeNode;
+
+            while (!isEmpty)
+            {
+                (isEmpty, node) = stack.pop();
+>>>>>>> master
                 
                 yield node!.data;
 
                 if (node!.right != nil) {
+<<<<<<< HEAD
                     stack.append(node!.right);
                 }
                 if (node!.left != nil) {
                     stack.append(node!.left);
                 }
             }
+=======
+                    stack.push(node!.right);
+                }
+                if (node!.left != nil) {
+                    stack.push(node!.left);
+                }
+            }
+            stack.tryReclaim();
+>>>>>>> master
         }
 
         /* Iterates through the AVL tree by performing postOrder traversal */
@@ -444,6 +674,7 @@ module AVLTree
             }
 
             // An implementation with 2 stacks
+<<<<<<< HEAD
             var stack1 = new list(AVLTreeNode);
             var stack2 = new list(AVLTreeNode);
 
@@ -462,17 +693,51 @@ module AVLTree
                 }
                 if (node!.right != nil) {
                     stack1.append(node!.right);
+=======
+            var stack1 = new LockFreeStack(AVLTreeNode);
+            var stack2 = new LockFreeStack(AVLTreeNode);
+
+            stack1.push(root);
+
+            var isEmpty1 = false;
+            var node: AVLTreeNode;
+
+            while (!isEmpty1)
+            {
+                (isEmpty1, node) = stack1.pop();
+
+                stack2.push(node);
+
+                if (node!.left != nil) {
+                    stack1.push(node!.left);
+                }
+                if (node!.right != nil) {
+                    stack1.push(node!.right);
+>>>>>>> master
                 }
             }
 
             // Now we have the reverse of what shoulde be the postOrder in stack2
             // Hence emptying stack2 will give the correct order
+<<<<<<< HEAD
 
             while (!stack2.isEmpty()) 
             {
                 node = stack2.pop();
                 yield node!.data;
             }
+=======
+            var isEmpty2 = false;
+
+            while (!isEmpty2) 
+            {
+                (isEmpty2, node) = stack2.pop();
+                yield node!.data;
+            }
+
+            stack1.tryReclaim();
+            stack2.tryReclaim();
+>>>>>>> master
         }
 
         /* Outputs inorder traversal of the tree */
